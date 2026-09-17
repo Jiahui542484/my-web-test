@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本周状态自测 · Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --ink:#1F2A3D;
+    --paper:#F6F4EE;
+    --panel:#FFFFFF;
+    --line:#DDD8C8;
+    --sage:#5E7C6B;
+    --sage-soft:#E4EBE4;
+    --gold:#B8862E;
+    --radius:4px;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+  }
+  h1,h2,h3{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    margin:0 0 0.4em 0;
+  }
+
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+
+  /* ---- 头部 ---- */
+  .header{
+    border-bottom:1px solid var(--line);
+    padding-bottom:28px;
+    margin-bottom:36px;
+  }
+  .header .kicker{
+    color:var(--sage);
+    font-size:14px;
+    margin-bottom:10px;
+  }
+  .header h1{
+    font-size:30px;
+    max-width:16ch;
+  }
+  .header p{
+    max-width:46ch;
+    color:#4B5563;
+    font-size:15px;
+  }
+
+  /* ---- 说明卡 ---- */
+  .intro-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:24px;
+    margin-bottom:28px;
+  }
+  .intro-card ul{
+    margin:0;
+    padding-left:1.1em;
+    font-size:14px;
+    color:#3F4A5A;
+  }
+  .intro-card li{margin-bottom:6px;}
+
+  button.primary{
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    padding:14px 28px;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:500;
+    border-radius:var(--radius);
+    cursor:pointer;
+  }
+  button.primary:hover{background:#33425C;}
+  button.ghost{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:10px 18px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+  }
+  button.ghost:hover{border-color:var(--ink);}
+  button:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* ---- 进度 ---- */
+  .progress-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:13px;
+    color:#6B7280;
+    margin-bottom:10px;
+  }
+  .progress-track{
+    height:3px;
+    background:var(--line);
+    border-radius:2px;
+    margin-bottom:32px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--sage);
+    transition:width .3s ease;
+  }
+
+  /* ---- 题目卡 ---- */
+  .q-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:32px 28px;
+  }
+  .q-dim{
+    font-size:13px;
+    color:var(--sage);
+    margin-bottom:8px;
+  }
+  .q-text{
+    font-size:19px;
+    font-family:'Source Serif 4',serif;
+    margin-bottom:24px;
+    max-width:26ch;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:28px;
+  }
+  .option{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px 16px;
+    font-size:14px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .option:hover{border-color:var(--sage);}
+  .option.selected{
+    border-color:var(--sage);
+    background:var(--sage-soft);
+  }
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+  }
+
+  /* ---- 结果 ---- */
+  .result-summary{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px;
+    margin-bottom:20px;
+  }
+  .result-summary .label{font-size:13px;color:#6B7280;margin-bottom:4px;}
+  .result-summary .headline{font-size:22px;margin-bottom:6px;}
+  .dim-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .dim-name{
+    width:96px;
+    flex-shrink:0;
+    font-size:13px;
+    color:#3F4A5A;
+  }
+  .dim-bar-track{
+    flex:1;
+    height:8px;
+    background:var(--sage-soft);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .dim-bar-fill{
+    height:100%;
+    background:var(--gold);
+  }
+  .dim-score{
+    width:32px;
+    text-align:right;
+    font-size:13px;
+    color:#3F4A5A;
+  }
+  .note{
+    font-size:13px;
+    color:#6B7280;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+    margin-top:20px;
+  }
+
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="kicker">状态自测 · Demo</div>
+    <h1>本周状态自测</h1>
+    <p>一个纯前端实现的答题 + 计分 + 结果展示示例，共 16 题，约 3 分钟。所有计算都在你的浏览器里完成，不发送到任何服务器。</p>
+  </div>
+
+  <!-- 说明页 -->
+  <div id="intro">
+    <div class="intro-card">
+      <ul>
+        <li>这是一个演示用的自测工具，题目由我自行编写，不是任何正式量表的复制</li>
+        <li>请凭第一感觉作答，没有标准答案</li>
+        <li>结果仅作为自我觉察的参考，不构成医学诊断</li>
+      </ul>
+    </div>
+    <button class="primary" onclick="startQuiz()">开始测试</button>
+  </div>
+
+  <!-- 答题页 -->
+  <div id="quiz" class="hidden">
+    <div class="progress-row">
+      <span id="progressLabel">题目 1 / 16</span>
+      <span id="progressPct">6%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:6%"></div></div>
+
+    <div class="q-card">
+      <div class="q-dim" id="qDim">情绪状态</div>
+      <div class="q-text" id="qText">最近一周，我感觉心情比较平稳。</div>
+      <div class="options" id="qOptions"></div>
+      <div class="nav-row">
+        <button class="ghost" id="btnPrev" onclick="prevQ()">上一题</button>
+        <button class="primary" id="btnNext" onclick="nextQ()" disabled>下一题</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果页 -->
+  <div id="result" class="hidden">
+    <div class="result-summary">
+      <div class="label">综合状态指数</div>
+      <div class="headline" id="overallHeadline">—</div>
+      <p id="overallDesc" style="font-size:14px;color:#4B5563;"></p>
+    </div>
+
+    <div class="result-summary">
+      <div class="label" style="margin-bottom:16px;">各维度得分</div>
+      <div id="dimList"></div>
+    </div>
+
+    <div class="note">
+      指数越低代表该维度当前压力感受越小；越高代表你在这方面感受到的困扰或波动越明显。这只是一个示例工具的计算结果，不能替代专业评估——如果某方面持续困扰你，找信任的人聊聊，或咨询专业人士，都是很好的选择。
+    </div>
+
+    <button class="ghost" style="margin-top:20px;" onclick="restart()">重新测试</button>
+  </div>
+
+</div>
+
+<script>
+const dims = ["情绪状态","专注与效率","人际与社交","睡眠与精力"];
+
+// 每个维度 4 题，5 档李克特量表，分值 0-4
+const questions = [
+  {dim:0, text:"最近一周，我的情绪总体比较平稳，没有明显低落。"},
+  {dim:0, text:"遇到不顺心的事，我能比较快地调整过来。"},
+  {dim:0, text:"我对接下来的日子还是有些期待和兴趣的。"},
+  {dim:0, text:"我很少因为一些小事而感到烦躁。"},
+
+  {dim:1, text:"做事情的时候，我能比较容易地集中注意力。"},
+  {dim:1, text:"我没有频繁地拖延该做的事情。"},
+  {dim:1, text:"我的思路清晰，做决定不费劲。"},
+  {dim:1, text:"工作或学习效率跟平时差不多，没有明显下降。"},
+
+  {dim:2, text:"我愿意主动联系朋友或家人聊聊近况。"},
+  {dim:2, text:"和别人相处时，我感觉比较自在，没有明显的疏离感。"},
+  {dim:2, text:"我不觉得自己在刻意回避社交场合。"},
+  {dim:2, text:"我感觉身边有人可以说说心里话。"},
+
+  {dim:3, text:"我最近的睡眠质量还算可以，容易入睡。"},
+  {dim:3, text:"白天醒着的时候，我精力还算充沛。"},
+  {dim:3, text:"我没有频繁地半夜醒来或早醒。"},
+  {dim:3, text:"整体来说，我不觉得身体特别疲惫。"},
+];
+
+const optionLabels = [
+  {text:"完全不符合", val:4},
+  {text:"比较不符合", val:3},
+  {text:"一般", val:2},
+  {text:"比较符合", val:1},
+  {text:"完全符合", val:0},
+];
+// 注：题目均为正向陈述，"完全符合"代表该维度状态越好 → 压力值记为0；
+// "完全不符合"代表该维度状态越弱 → 压力值记为4，分数越高代表越需要关注。
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+
+function startQuiz(){
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = questions[current];
+  document.getElementById('qDim').textContent = dims[q.dim];
+  document.getElementById('qText').textContent = q.text;
+  document.getElementById('progressLabel').textContent = `题目 ${current+1} / ${questions.length}`;
+  const pct = Math.round(((current+1)/questions.length)*100);
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  const optsWrap = document.getElementById('qOptions');
+  optsWrap.innerHTML = '';
+  optionLabels.forEach((opt, idx) => {
+    const div = document.createElement('div');
+    div.className = 'option' + (answers[current] === opt.val ? ' selected' : '');
+    div.textContent = opt.text;
+    div.onclick = () => selectOption(opt.val);
+    optsWrap.appendChild(div);
+  });
+
+  document.getElementById('btnPrev').disabled = current === 0;
+  document.getElementById('btnNext').disabled = answers[current] === null;
+  document.getElementById('btnNext').textContent = current === questions.length - 1 ? '查看结果' : '下一题';
+}
+
+function selectOption(val){
+  answers[current] = val;
+  renderQuestion();
+}
+
+function prevQ(){
+  if(current > 0){ current--; renderQuestion(); }
+}
+
+function nextQ(){
+  if(answers[current] === null) return;
+  if(current < questions.length - 1){
+    current++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult(){
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('result').classList.remove('hidden');
+
+  // 按维度汇总
+  const dimTotals = [0,0,0,0];
+  const dimCounts = [0,0,0,0];
+  questions.forEach((q, i) => {
+    dimTotals[q.dim] += answers[i];
+    dimCounts[q.dim] += 1;
+  });
+  const dimAvgs = dimTotals.map((t,i) => t / dimCounts[i]); // 0-4
+
+  const overallAvg = dimAvgs.reduce((a,b)=>a+b,0) / dimAvgs.length;
+
+  let headline, desc;
+  if(overallAvg < 1){
+    headline = '整体状态平稳';
+    desc = '从这次答题来看，你各方面的状态都比较稳定，继续保持当前的节奏就好。';
+  } else if(overallAvg < 2){
+    headline = '整体状态基本良好，个别方面有点波动';
+    desc = '大部分维度感觉还不错，可以留意一下得分偏高的维度，看看是否需要做些调整。';
+  } else if(overallAvg < 3){
+    headline = '有几个方面值得关注';
+    desc = '最近可能在某些方面感受到一些压力或困扰，建议给自己一点空间，也可以找人聊聊。';
+  } else {
+    headline = '近期压力感受比较明显';
+    desc = '几个维度的得分都偏高，说明最近可能过得比较辛苦。如果这种状态持续，找信任的人聊聊，或寻求专业帮助，都是值得考虑的选择。';
+  }
+
+  document.getElementById('overallHeadline').textContent = headline;
+  document.getElementById('overallDesc').textContent = desc;
+
+  const dimList = document.getElementById('dimList');
+  dimList.innerHTML = '';
+  dims.forEach((name, i) => {
+    const pct = Math.round((dimAvgs[i]/4)*100);
+    const row = document.createElement('div');
+    row.className = 'dim-row';
+    row.innerHTML = `
+      <div class="dim-name">${name}</div>
+      <div class="dim-bar-track"><div class="dim-bar-fill" style="width:${pct}%"></div></div>
+      <div class="dim-score">${dimAvgs[i].toFixed(1)}</div>
+    `;
+    dimList.appendChild(row);
+  });
+}
+
+function restart(){
+  current = 0;
+  answers = new Array(questions.length).fill(null);
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('intro').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
