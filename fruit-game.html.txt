@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>水果英语单词拼写游戏</title>
+  <style>
+    *{box-sizing:border-box;font-family:system-ui,sans-serif;margin:0;padding:0}
+    body{background:#f0f8ff;padding:16px;color:#222;max-width:700px;margin:0 auto}
+    .title{text-align:center;font-size:24px;margin-bottom:16px;font-weight:bold}
+    .mode-box{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
+    .mode-btn{padding:8px 16px;border-radius:8px;border:none;background:#4096ff;color:#fff;font-size:16px;cursor:pointer}
+    .mode-btn.active{background:#1874cd}
+    .game-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px #00000015;margin-bottom:20px}
+    .fruit-emoji{font-size:60px;text-align:center;margin-bottom:10px}
+    .cn-name{text-align:center;font-size:20px;margin-bottom:16px}
+    .spell-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+    .letter-cell{width:44px;height:48px;border:2px solid #999;border-radius:8px;text-align:center;font-size:24px;line-height:44px;font-weight:bold}
+    .keyboard{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin-bottom:24px}
+    .key{padding:10px 0;background:#e8f0fe;border-radius:6px;border:none;font-size:18px;cursor:pointer}
+    .key:active{background:#bdd7f5}
+    .key.bt{background:#ffdf70}
+    .select-title{font-size:18px;font-weight:bold;margin-bottom:12px}
+    .fruit-list{display:flex;flex-wrap:wrap;gap:8px}
+    .fruit-item{padding:6px 10px;background:#f4f7fa;border-radius:6px;cursor:pointer;border:1px solid #dce3ec}
+    .fruit-item.selected{background:#4096ff;color:white;border-color:#4096ff}
+    .btn-row{display:flex;gap:10px;justify-content:center;margin:16px 0}
+    .action-btn{padding:8px 14px;border-radius:8px;border:none;background:#52c41a;color:white;font-size:15px;cursor:pointer}
+    .hint-btn{background:#faad14}
+    .reset-btn{background:#ff4d4f}
+    .stat{text-align:center;color:#555;margin-top:10px}
+    .star{color:#ffc53d;font-size:22px}
+  </style>
+</head>
+<body>
+<div class="title">🍓水果单词拼写游戏</div>
+<div class="mode-box">
+  <button class="mode-btn active" id="modeAssist">🧩辅助拼写模式</button>
+  <button class="mode-btn" id="modeFull">💪全拼模式</button>
+</div>
+
+<div class="game-card">
+  <div class="fruit-emoji" id="emoji">🍎</div>
+  <div class="cn-name" id="cnWord">苹果</div>
+  <div class="spell-row" id="spellArea"></div>
+  <div class="btn-row">
+    <button class="action-btn hint-btn" id="hintBtn">💡提示</button>
+    <button class="action-btn" id="checkBtn">✅核对答案</button>
+    <button class="action-btn reset-btn" id="resetBtn">🔄重置</button>
+  </div>
+  <div class="stat" id="statusText"></div>
+</div>
+
+<!-- 26字母键盘 -->
+<div class="keyboard" id="keyboard"></div>
+
+<!-- 选择练习水果区域 -->
+<div class="select-title">🎯选择要练习的水果</div>
+<div class="fruit-list" id="fruitList"></div>
+
+<script>
+const fruitWords = [
+  {en:"apple",cn:"苹果",emoji:"🍎"},
+  {en:"banana",cn:"香蕉",emoji:"🍌"},
+  {en:"grape",cn:"葡萄",emoji:"🍇"},
+  {en:"pear",cn:"梨",emoji:"🍐"},
+  {en:"orange",cn:"橙子",emoji:"🍊"},
+  {en:"peach",cn:"桃子",emoji:"🍑"},
+  {en:"watermelon",cn:"西瓜",emoji:"🍉"},
+  {en:"strawberry",cn:"草莓",emoji:"🍓"},
+  {en:"pineapple",cn:"菠萝",emoji:"🍍"},
+  {en:"mango",cn:"芒果",emoji:"🥭"},
+  {en:"cherry",cn:"樱桃",emoji:"🍒"},
+  {en:"lemon",cn:"柠檬",emoji:"🍋"},
+  {en:"blueberry",cn:"蓝莓",emoji:"🫐"},
+  {en:"kiwi",cn:"猕猴桃",emoji:"🥝"},
+  {en:"coconut",cn:"椰子",emoji:"🥥"},
+  {en:"lychee",cn:"荔枝",emoji:"🍒"},
+  {en:"durian",cn:"榴莲",emoji:"🤎"}
+];
+
+let gameState = {
+  assistMode:true,
+  currentWord:null,
+  hideCount:1,
+  userInput:[],
+  mastered:JSON.parse(localStorage.getItem("fruitMaster")||"{}")
+};
+
+// 渲染字母键盘
+function renderKeyboard(){
+  const keys = "abcdefghijklmnopqrstuvwxyz".split("");
+  const wrap = document.getElementById("keyboard");
+  wrap.innerHTML="";
+  keys.forEach(k=>{
+    const btn = document.createElement("button");
+    btn.className="key";
+    btn.textContent=k;
+    btn.onclick=()=>typeLetter(k);
+    wrap.appendChild(btn);
+  })
+}
+
+// 渲染水果选择列表
+function renderFruitSelect(){
+  const wrap = document.getElementById("fruitList");
+  wrap.innerHTML="";
+  fruitWords.forEach(item=>{
+    const div = document.createElement("div");
+    div.className = "fruit-item"+(gameState.currentWord?.en===item.en?" selected":"");
+    div.textContent = `${item.emoji} ${item.en}`;
+    div.onclick = ()=>selectWord(item);
+    wrap.appendChild(div);
+  })
+}
+
+function selectWord(word){
+  gameState.currentWord = {...word};
+  gameState.hideCount=1;
+  gameState.userInput = Array(word.en.length).fill("");
+  renderGame();
+  renderFruitSelect();
+}
+
+function typeLetter(char){
+  if(!gameState.currentWord) return;
+  const emptyIdx = gameState.userInput.findIndex(v=>v==="");
+  if(emptyIdx>-1){
+    gameState.userInput[emptyIdx]=char;
+    renderGame();
+  }
+}
+
+function renderGame(){
+  const w = gameState.currentWord;
+  if(!w){
+    document.getElementById("spellArea").innerHTML="<div>请先在下方选择一个水果单词开始练习</div>";
+    document.getElementById("emoji").textContent="";
+    document.getElementById("cnWord").textContent="";
+    return;
+  }
+  document.getElementById("emoji").textContent=w.emoji;
+  document.getElementById("cnWord").textContent=w.cn;
+
+  const answer = w.en.split("");
+  const spellWrap = document.getElementById("spellArea");
+  spellWrap.innerHTML="";
+
+  let hideIndexList = [];
+  if(gameState.assistMode){
+    const total = answer.length;
+    const hideNum = Math.min(gameState.hideCount,total);
+    //随机挑选要隐藏的位置
+    const allIdx = [...Array(total).keys()];
+    shuffle(allIdx);
+    hideIndexList = allIdx.slice(0,hideNum);
+  }
+
+  answer.forEach((char,idx)=>{
+    const cell = document.createElement("div");
+    cell.className="letter-cell";
+    if(gameState.assistMode && hideIndexList.includes(idx)){
+      //需要隐藏，显示用户输入
+      cell.textContent = gameState.userInput[idx]||"";
+    }else{
+      //展示原字母
+      cell.textContent = char;
+    }
+    spellWrap.appendChild(cell);
+  })
+  const star = gameState.mastered[w.en]?"⭐":"";
+  document.getElementById("statusText").textContent = `缺失字母数量：${gameState.hideCount} ${star}`;
+}
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
+
+//核对答案
+document.getElementById("checkBtn").onclick = ()=>{
+  const w = gameState.currentWord;
+  if(!w) return;
+  const ans = w.en.split("");
+  let ok = true;
+  for(let i=0;i<ans.length;i++){
+    const isHidden = gameState.assistMode && gameState.hideIndexList?.includes(i);
+    if(gameState.assistMode && isHidden){
+      if(gameState.userInput[i].toLowerCase()!==ans[i]) ok=false;
+    }
+  }
+  if(!gameState.assistMode){
+    if(gameState.userInput.join("").toLowerCase()!==w.en) ok=false;
+  }
+  if(ok){
+    alert("🎉答对啦！");
+    if(gameState.assistMode){
+      gameState.hideCount++;
+      //全部字母隐藏完成，标记掌握
+      if(gameState.hideCount>w.en.length){
+        gameState.mastered[w.en]=true;
+        localStorage.setItem("fruitMaster",JSON.stringify(gameState.mastered));
+        alert("✅这个单词全部通关！");
+      }
+    }else{
+      gameState.mastered[w.en]=true;
+      localStorage.setItem("fruitMaster",JSON.stringify(gameState.mastered));
+    }
+    gameState.userInput = Array(w.en.length).fill("");
+    renderGame();
+    renderFruitSelect();
+  }else{
+    alert("❌拼写错误，请重试");
+    gameState.userInput = Array(w.en.length).fill("");
+    renderGame();
+  }
+}
+
+//提示按钮，填充一个正确字母
+document.getElementById("hintBtn").onclick = ()=>{
+  const w = gameState.currentWord;
+  if(!w) return;
+  const ans = w.en.split("");
+  for(let i=0;i<ans.length;i++){
+    if(gameState.userInput[i]===""){
+      gameState.userInput[i]=ans[i];
+      renderGame();
+      return;
+    }
+  }
+}
+
+document.getElementById("resetBtn").onclick = ()=>{
+  if(!gameState.currentWord) return;
+  gameState.userInput = Array(gameState.currentWord.en.length).fill("");
+  renderGame();
+}
+
+//模式切换
+document.getElementById("modeAssist").onclick=()=>{
+  gameState.assistMode=true;
+  document.getElementById("modeAssist").classList.add("active");
+  document.getElementById("modeFull").classList.remove("active");
+  if(gameState.currentWord) gameState.hideCount=1;
+  renderGame();
+}
+document.getElementById("modeFull").onclick=()=>{
+  gameState.assistMode=false;
+  document.getElementById("modeAssist").classList.remove("active");
+  document.getElementById("modeFull").classList.add("active");
+  renderGame();
+}
+
+//初始化
+renderKeyboard();
+renderFruitSelect();
+</script>
+</body>
+</html>
